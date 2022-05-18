@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+    redis:
+        image: redis:alpine
+        command: redis-server --requirepass s0mE_sEcUrE
+        ports:
+          - 6379:6379
+        volumes: 
+          - $PWD/redis-data:/var/lib/redis
+          - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+        environment:
+          - REDIS_REPLICATION_MODE=master
+        networks:
+          node_net:
+            ipv4_address: 172.28.1.4
+    dev:
+        container_name: nestjs_api_dev
+
+        # image: redis:alpine
+        # command: redis-server --requirepass s0mE_sEcUrE
+        # ports:
+        #   - 6379:6379
+        # volumes: 
+        #   - $PWD/redis-data:/var/lib/redis
+        #   - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+        # environment:
+        #   - REDIS_REPLICATION_MODE=master
+        # networks:
+        #   node_net:
+        #     ipv4_address: 172.28.1.4
+
+        image: nestjs-api-dev:1.0.0
+        build:
+            context: .
+            target: development
+            dockerfile: ./Dockerfile
+        command: npm run start:debug
+        ports:
+            - 3000:3000
+            - 9229:9229
+        networks:
+            - nesjs-network
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+        restart: unless-stopped
+    # prod:
+    #     container_name: nestjs_api_prod
+    #     image: nestjs-api-prod:1.0.0
+    #     build:
+    #         context: .
+    #         target: production
+    #         dockerfile: ./Dockerfile
+    #     command: npm run start:prod
+    #     ports:
+    #         - 3000:3000
+    #         - 9229:9229
+    #     networks:
+    #         - nesjs-network
+    #     volumes:
+    #         - .:/usr/src/app
+    #         - /usr/src/app/node_modules
+    #     restart: unless-stopped
+
+networks:
+    nesjs-network:
+    node_net:
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.28.0.0/16
